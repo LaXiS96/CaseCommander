@@ -21,7 +21,7 @@ I first tried Windows Subsystem for Linux and it worked well up to the point of 
 Then I tried MSYS2, but I didn't even bother once I saw it doesn't show USB devices either.
 So I simply installed Ubuntu 20.04 Server inside a VM and set up VSCode with its Remote SSH extension, which by the way works really well.
 
-- Ubuntu 20.04 with these packages: `build-essential python-is-python3 openocd`
+- Ubuntu 20.04 with these packages: `build-essential python-is-python3 openocd libncurses5`
 - Visual Studio Code with the following extensions:
     - C/C++
     - Cortex-Debug
@@ -41,6 +41,7 @@ So I simply installed Ubuntu 20.04 Server inside a VM and set up VSCode with its
 2. Edit these files as needed:
     - `env.sh` for toolchain location
     - `.vscode/c_cpp_properties.json` for VSCode IntelliSense
+    - `.vscode/launch.json` for Cortex-Debug
 
 3. Set up environment
 
@@ -50,14 +51,14 @@ So I simply installed Ubuntu 20.04 Server inside a VM and set up VSCode with its
 
         make -C lib/libopencm3
 
-5. Build CaseCommander
+5. Build
 
         make
 
-6. Debug CaseCommander
+6. Debug
 
-        TODO
+        # Run "Cortex Debug" configuration in VSCode
 
-7. Flash CaseCommander
+7. Flash
 
         make flash
