@@ -1,3 +1,6 @@
 [submodule "firmware/lib/libopencm3"]
 	path = firmware/lib/libopencm3
 	url = https://github.com/libopencm3/libopencm3.git
+[submodule "firmware/lib/FreeRTOS"]
+	path = firmware/lib/FreeRTOS
+	url = https://github.com/FreeRTOS/FreeRTOS-Kernel.git
