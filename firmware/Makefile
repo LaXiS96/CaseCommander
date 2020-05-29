@@ -7,9 +7,7 @@ CFILES := $(shell find src/ -name '*.c')
 AFILES := $(shell find src/ -name '*.S')
 
 DEVICE = stm32f103c8t6
-# TODO check OpenOCD settings
-OOCD_INTERFACE = jlink
-OOCD_TARGET = stm32f1x
+OOCD_FILE = openocd.cfg
 
 OPENCM3_DIR = lib/libopencm3
 
