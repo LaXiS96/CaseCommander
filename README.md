@@ -30,7 +30,7 @@ So I simply installed Ubuntu 20.04 Server inside a VM and set up VSCode with its
 
 ## Used libraries
 - [libopencm3](https://github.com/libopencm3/libopencm3)
-- [FreeRTOS](https://www.freertos.org/) TODO
+- [FreeRTOS](https://www.freertos.org/) 10.3.1
 
 ## Building
 1. Clone repository including submodules
