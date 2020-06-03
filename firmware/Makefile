@@ -9,11 +9,12 @@ AFILES := $(shell find src/ -name '*.S')
 INCLUDES += -Isrc
 
 # FreeRTOS sources
-CFILES += lib/FreeRTOS/tasks.c \
+CFILES += lib/FreeRTOS/portable/GCC/ARM_CM3/port.c \
+		  lib/FreeRTOS/portable/MemMang/heap_4.c \
+		  lib/FreeRTOS/tasks.c \
 		  lib/FreeRTOS/queue.c \
- 		  lib/FreeRTOS/list.c \
-		  lib/FreeRTOS/portable/GCC/ARM_CM3/port.c \
-		  lib/FreeRTOS/portable/MemMang/heap_1.c
+		  lib/FreeRTOS/list.c \
+		  lib/FreeRTOS/stream_buffer.c
 INCLUDES += -Ilib/FreeRTOS/include \
 			-Ilib/FreeRTOS/portable/GCC/ARM_CM3
 

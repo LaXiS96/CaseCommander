@@ -2,15 +2,30 @@
 #define CASECOMMANDER_USB_H
 
 #include <stdint.h>
+#include <stdlib.h>
+#include <string.h>
 
+#include <libopencm3/stm32/gpio.h>
+#include <libopencm3/stm32/rcc.h>
 #include <libopencm3/usb/cdc.h>
 #include <libopencm3/usb/usbd.h>
 
 #include <FreeRTOS.h>
+#include <message_buffer.h>
+#include <stream_buffer.h>
 #include <task.h>
 
+#include "util.h"
+
+#define CC_USB_EP_COMM_IN  0x83
+#define CC_USB_EP_DATA_IN  0x82
+#define CC_USB_EP_DATA_OUT 0x01
+
+#define CC_STREAM_BUFFER_SIZE  8 // TODO testing, must be at least 64 (USB packet size)
+#define CC_MESSAGE_BUFFER_SIZE 256
+
 /**
- * USB Device descriptor
+ * USB Device descriptor (uses ST VCP VID/PID)
  */
 static const struct usb_device_descriptor usbDevDesc = {
     .bLength            = USB_DT_DEVICE_SIZE,
@@ -35,7 +50,7 @@ static const struct usb_device_descriptor usbDevDesc = {
 static const struct usb_endpoint_descriptor usbCommEpDesc[] = {{
     .bLength          = USB_DT_ENDPOINT_SIZE,
     .bDescriptorType  = USB_DT_ENDPOINT,
-    .bEndpointAddress = 0x83,
+    .bEndpointAddress = CC_USB_EP_COMM_IN,
     .bmAttributes     = USB_ENDPOINT_ATTR_INTERRUPT,
     .wMaxPacketSize   = 16,
     .bInterval        = 255,
@@ -48,7 +63,7 @@ static const struct usb_endpoint_descriptor usbDataEpDesc[] = {
     {
         .bLength          = USB_DT_ENDPOINT_SIZE,
         .bDescriptorType  = USB_DT_ENDPOINT,
-        .bEndpointAddress = 0x01,
+        .bEndpointAddress = CC_USB_EP_DATA_OUT,
         .bmAttributes     = USB_ENDPOINT_ATTR_BULK,
         .wMaxPacketSize   = 64,
         .bInterval        = 1,
@@ -56,7 +71,7 @@ static const struct usb_endpoint_descriptor usbDataEpDesc[] = {
     {
         .bLength          = USB_DT_ENDPOINT_SIZE,
         .bDescriptorType  = USB_DT_ENDPOINT,
-        .bEndpointAddress = 0x82,
+        .bEndpointAddress = CC_USB_EP_DATA_IN,
         .bmAttributes     = USB_ENDPOINT_ATTR_BULK,
         .wMaxPacketSize   = 64,
         .bInterval        = 1,
@@ -175,6 +190,11 @@ static const char *usbStrings[] = {
     "1234",
 };
 
+extern MessageBufferHandle_t usbRxMessages;
+
+void usbReenumerate(void);
 void usbInit(void);
+size_t usbWrite(const char *data, size_t length);
+size_t usbWriteString(const char *str);
 
 #endif

@@ -62,3 +62,7 @@ So I simply installed Ubuntu 20.04 Server inside a VM and set up VSCode with its
 7. Flash
 
         make flash
+
+## Useful links
+- https://github.com/ve3wwg/stm32f103c8t6
+- https://github.com/libopencm3/libopencm3-examples/tree/master/examples/stm32/f1
