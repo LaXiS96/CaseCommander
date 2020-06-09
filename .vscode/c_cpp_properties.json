@@ -3,14 +3,13 @@
         {
             "name": "ARM",
             "includePath": [
-                "${workspaceFolder}/**",
-                "~/gcc-arm-none-eabi-9-2020-q2-update/arm-none-eabi/include"
+                "${workspaceFolder}/**"
             ],
             "defines": [
-                "STM32F1"
+                "STM32F1",
+                "__ARM_ARCH_7M__"
             ],
-            "cStandard": "c11",
-            "cppStandard": "c++17",
+            "cStandard": "c99",
             "intelliSenseMode": "gcc-x64"
         }
     ],

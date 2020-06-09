@@ -17,11 +17,12 @@
 
 #include "util.h"
 
-#define CC_USB_EP_COMM_IN  0x83
-#define CC_USB_EP_DATA_IN  0x82
-#define CC_USB_EP_DATA_OUT 0x01
+#define CC_USB_EP_COMM_IN      0x83
+#define CC_USB_EP_DATA_IN      0x82
+#define CC_USB_EP_DATA_OUT     0x01
+#define CC_USB_MAX_PACKET_SIZE 64
 
-#define CC_STREAM_BUFFER_SIZE  8 // TODO testing, must be at least 64 (USB packet size)
+#define CC_STREAM_BUFFER_SIZE  256 // TODO testing, must be at least 64 (USB packet size)
 #define CC_MESSAGE_BUFFER_SIZE 256
 
 /**
@@ -65,7 +66,7 @@ static const struct usb_endpoint_descriptor usbDataEpDesc[] = {
         .bDescriptorType  = USB_DT_ENDPOINT,
         .bEndpointAddress = CC_USB_EP_DATA_OUT,
         .bmAttributes     = USB_ENDPOINT_ATTR_BULK,
-        .wMaxPacketSize   = 64,
+        .wMaxPacketSize   = CC_USB_MAX_PACKET_SIZE,
         .bInterval        = 1,
     },
     {
@@ -73,7 +74,7 @@ static const struct usb_endpoint_descriptor usbDataEpDesc[] = {
         .bDescriptorType  = USB_DT_ENDPOINT,
         .bEndpointAddress = CC_USB_EP_DATA_IN,
         .bmAttributes     = USB_ENDPOINT_ATTR_BULK,
-        .wMaxPacketSize   = 64,
+        .wMaxPacketSize   = CC_USB_MAX_PACKET_SIZE,
         .bInterval        = 1,
     }};
 
@@ -81,10 +82,10 @@ static const struct usb_endpoint_descriptor usbDataEpDesc[] = {
  * USB CDC ACM functional descriptors
  */
 static const struct {
-    struct usb_cdc_header_descriptor usbCdcHeaderDesc;
+    struct usb_cdc_header_descriptor          usbCdcHeaderDesc;
     struct usb_cdc_call_management_descriptor usbCdcCallMgmtDesc;
-    struct usb_cdc_acm_descriptor usbCdcAcmDesc;
-    struct usb_cdc_union_descriptor usbCdcUnionDesc;
+    struct usb_cdc_acm_descriptor             usbCdcAcmDesc;
+    struct usb_cdc_union_descriptor           usbCdcUnionDesc;
 } __attribute__((packed)) usbCdcFunctionalDescs = {
     .usbCdcHeaderDesc =
         {
@@ -192,8 +193,8 @@ static const char *usbStrings[] = {
 
 extern MessageBufferHandle_t usbRxMessages;
 
-void usbReenumerate(void);
-void usbInit(void);
+void   usbReenumerate(void);
+void   usbInit(void);
 size_t usbWrite(const char *data, size_t length);
 size_t usbWriteString(const char *str);
 

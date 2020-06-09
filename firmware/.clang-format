@@ -1,6 +1,7 @@
 # https://clang.llvm.org/docs/ClangFormatStyleOptions.html
 AlignAfterOpenBracket: AlwaysBreak
 AlignConsecutiveAssignments: true
+AlignConsecutiveDeclarations: true
 AlignConsecutiveMacros: true
 AllowShortFunctionsOnASingleLine: false
 BasedOnStyle: LLVM

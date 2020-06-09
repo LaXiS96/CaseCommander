@@ -6,7 +6,7 @@ BUILD_DIR = bin
 # Project sources
 CFILES := $(shell find src/ -name '*.c')
 AFILES := $(shell find src/ -name '*.S')
-INCLUDES += -Isrc
+INCLUDES += -Iinc
 
 # FreeRTOS sources
 CFILES += lib/FreeRTOS/portable/GCC/ARM_CM3/port.c \

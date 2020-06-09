@@ -4,7 +4,7 @@ static void commanderTask(void *arg)
 {
     (void)arg;
 
-    char message[64];
+    char   message[64];
     size_t messageLen;
 
     for (;;) {

@@ -1,18 +1,20 @@
 #include "usb.h"
 
+// TODO rename to "comm" and handle all PC communication in here
+
 MessageBufferHandle_t usbRxMessages;
 
-static bool isConfigured;
+static bool    isConfigured;
 static uint8_t usbControlBuf[128];
 
 static StreamBufferHandle_t rxStream;
 static StreamBufferHandle_t txStream;
 
 static enum usbd_request_return_codes usbCdcAcmControlRequestCb(
-    usbd_device *usbd_dev,
+    usbd_device *          usbd_dev,
     struct usb_setup_data *req,
-    uint8_t **buf,
-    uint16_t *len,
+    uint8_t **             buf,
+    uint16_t *             len,
     void (**complete)(usbd_device *usbd_dev, struct usb_setup_data *req))
 {
     (void)usbd_dev;
@@ -34,7 +36,7 @@ static enum usbd_request_return_codes usbCdcAcmControlRequestCb(
 static void usbCdcAcmReceiveCb(usbd_device *usbd_dev, uint8_t ep)
 {
     size_t rxAvail = xStreamBufferSpacesAvailable(rxStream);
-    char buf[64];
+    char   buf[64];
 
     if (rxAvail == 0)
         return;
@@ -66,9 +68,9 @@ static void usbCdcAcmSetConfigCb(usbd_device *usbd_dev, uint16_t wValue)
 static void usbTask(void *arg)
 {
     usbd_device *usbDev = (usbd_device *)arg;
-    char buf[CC_STREAM_BUFFER_SIZE];
-    char *message     = NULL;
-    size_t messageLen = 0;
+    static char  buf[CC_USB_MAX_PACKET_SIZE - 1]; // -1 because sending full packets is a PITA
+    char *       message    = NULL;
+    size_t       messageLen = 0;
 
     for (;;) {
         usbd_poll(usbDev);
@@ -79,8 +81,8 @@ static void usbTask(void *arg)
         if (rxLen > 0) {
             usbWriteString(cc_sprintf("SRX%d\n", rxLen));
             // Find LF character in received data
-            char *pos      = memchr(buf, '\n', rxLen);
-            bool lfFound   = (pos != NULL);
+            char * pos     = memchr(buf, '\n', rxLen);
+            bool   lfFound = (pos != NULL);
             size_t copyLen = lfFound ? (size_t)(pos - buf) : rxLen;
 
             // Append data to current message
@@ -108,15 +110,27 @@ static void usbTask(void *arg)
         }
 
         if (isConfigured) {
+            // TODO MUST SYNCHRONIZE USB WRITES, need to wait for last packet to be sent before
+            // writing a new one (use in endpoint callback to give semaphore to taking task)
+
+            // static bool zlpNeeded = false;
             // Send data from TX stream
             size_t txLen = xStreamBufferReceive(txStream, buf, sizeof(buf), 0);
             if (txLen > 0) {
+                // ATTENTION: do not exceed the endpoint's max packet size when sending, the driver
+                // does not split packets automagically so we must do it ourselves
                 usbd_ep_write_packet(usbDev, CC_USB_EP_DATA_IN, buf, txLen);
-                // } else {
-                //     taskYIELD();
+                // zlpNeeded = txLen % CC_USB_MAX_PACKET_SIZE == 0;
+
+                // TODO don't send zlp if not needed (eg. when message is longer than 64)
+                // Delay a bit and send a zero length packet:
+                // - delay is needed because... it doesn't work without it
+                // - zero length packet is needed to close a full packet (64bytes = max packet size)
+                //
+                // usbd_ep_write_packet(usbDev, CC_USB_EP_DATA_IN, "", 1);
+                // } else if (zlpNeeded) {
+                //     usbd_ep_write_packet(usbDev, CC_USB_EP_DATA_IN, NULL, 0);
             }
-            // } else {
-            //     taskYIELD();
         }
     }
 }
@@ -128,7 +142,7 @@ void usbReenumerate(void)
     gpio_set_mode(GPIOA, GPIO_MODE_OUTPUT_2_MHZ, GPIO_CNF_OUTPUT_PUSHPULL, GPIO12);
     gpio_clear(GPIOA, GPIO12);
 
-    // ~194ms delay (as verified with oscilloscope)
+    // ~195ms delay (as verified with oscilloscope)
     // TODO maybe setup SysTick and use that for deterministic delay
     for (int i = 0; i < 2000000; i++)
         __asm__("nop");
@@ -160,6 +174,7 @@ void usbInit(void)
 
 size_t usbWrite(const char *data, size_t length)
 {
+    // TODO use FromISR if calling from isr
     return xStreamBufferSend(txStream, data, length, 0);
 }
 
