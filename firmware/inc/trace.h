@@ -6,6 +6,12 @@
 #include <libopencm3/cm3/tpiu.h>
 #include <libopencm3/stm32/dbgmcu.h>
 
+#define CC_TRACE_CLOCK        2000000
+#define CC_TRACE_CONSOLE_STIM 0
+
 void traceInit(void);
+void traceWriteChar(const char chr);
+void tracePrint(const char *str);
+void tracePrintLine(const char *str);
 
 #endif

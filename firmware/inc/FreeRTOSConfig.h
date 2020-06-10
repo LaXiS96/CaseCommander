@@ -40,16 +40,17 @@
  * See http://www.freertos.org/a00110.html
  *----------------------------------------------------------*/
 
-#define configUSE_PREEMPTION     1
-#define configUSE_IDLE_HOOK      0
-#define configUSE_TICK_HOOK      0
-#define configCPU_CLOCK_HZ       72000000UL
-#define configTICK_RATE_HZ       (TickType_t)1000
-#define configMAX_PRIORITIES     5
-#define configMINIMAL_STACK_SIZE 128U
-#define configTOTAL_HEAP_SIZE    (size_t)(17 * 1024)
-#define configMAX_TASK_NAME_LEN  16
-#define configUSE_16_BIT_TICKS   0
+#define configUSE_PREEMPTION           1
+#define configUSE_IDLE_HOOK            0
+#define configUSE_TICK_HOOK            0
+#define configCPU_CLOCK_HZ             72000000UL
+#define configTICK_RATE_HZ             (TickType_t)1000
+#define configMAX_PRIORITIES           5
+#define configMINIMAL_STACK_SIZE       128U
+#define configTOTAL_HEAP_SIZE          (size_t)(17 * 1024)
+#define configMAX_TASK_NAME_LEN        16
+#define configUSE_16_BIT_TICKS         0
+#define configCHECK_FOR_STACK_OVERFLOW 2
 
 /* Co-routine definitions. */
 #define configUSE_CO_ROUTINES           0
@@ -78,5 +79,12 @@ NVIC value of 255. */
 #define vPortSVCHandler     sv_call_handler
 #define xPortPendSVHandler  pend_sv_handler
 #define xPortSysTickHandler sys_tick_handler
+
+// clang-format off
+/* Define configASSERT() to call vAssertCalled() if the assertion fails.  The assertion
+has failed if the value of the parameter passed into configASSERT() equals zero. */
+void vAssertCalled(const char *pcFile, unsigned long ulLine);
+#define configASSERT(x) if ((x) == 0) vAssertCalled(__FILE__, __LINE__)
+// clang-format on
 
 #endif /* FREERTOS_CONFIG_H */

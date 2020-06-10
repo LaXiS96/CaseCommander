@@ -1,0 +1,9 @@
+si swd
+speed auto
+device STM32F103C8
+r
+erase
+loadbin ./CaseCommander.bin 0x08000000
+r
+g
+q

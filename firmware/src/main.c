@@ -47,19 +47,25 @@ static void readTachoTask(void *arg)
     }
 }
 
+static void testTask(void *arg)
+{
+    (void)arg;
+
+    char buf[128];
+    buf[sizeof(buf) - 1] = '\0';
+}
+
 int main(void)
 {
     rcc_clock_setup_in_hse_8mhz_out_72mhz();
 
     traceInit();
 
-    for (;;) {
-        // TODO convert into tracePutChar and make up something sensible
-        ITM_STIM8(0) = 'A';
+    xTaskCreate(testTask, "test", 100, NULL, configMAX_PRIORITIES - 1, NULL);
+    vTaskStartScheduler();
 
-        for (int i = 0; i < 20000000; i++)
-            __asm__("nop");
-    }
+    for (;;)
+        ;
 
     rcc_periph_clock_enable(RCC_GPIOC);
     gpio_set_mode(GPIOC, GPIO_MODE_OUTPUT_2_MHZ, GPIO_CNF_OUTPUT_PUSHPULL, GPIO13);
@@ -79,4 +85,33 @@ int main(void)
     for (;;)
         ;
     return 0;
+}
+
+void hard_fault_handler(void)
+{
+    // TODO write better HardFault handling
+    tracePrintLine("hard_fault_handler");
+    for (;;)
+        ;
+}
+
+void mem_manage_handler(void)
+{
+    tracePrintLine("mem_manage_handler");
+    for (;;)
+        ;
+}
+
+void bus_fault_handler(void)
+{
+    tracePrintLine("bus_fault_handler");
+    for (;;)
+        ;
+}
+
+void usage_fault_handler(void)
+{
+    tracePrintLine("usage_fault_handler");
+    for (;;)
+        ;
 }

@@ -49,10 +49,12 @@
                         "port": 0,
                         "type": "console",
                         "label": "SWO output",
-                        "encoding": "ascii"
+                        "encoding": "ascii",
+                        "showOnStartup": true
                     }
                 ]
-            }
+            },
+            "rtos": "FreeRTOS"
         },
         {
             "name": "Cortex-Debug JLink Attach",
@@ -73,10 +75,12 @@
                         "port": 0,
                         "type": "console",
                         "label": "SWO output",
-                        "encoding": "ascii"
+                        "encoding": "ascii",
+                        "showOnStartup": true
                     }
                 ]
-            }
+            },
+            "rtos": "FreeRTOS"
         }
     ]
 }
