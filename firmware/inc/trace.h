@@ -11,6 +11,7 @@
 
 void traceInit(void);
 void traceWriteChar(const char chr);
+void traceWriteString(const char *str, uint32_t len);
 void tracePrint(const char *str);
 void tracePrintLine(const char *str);
 

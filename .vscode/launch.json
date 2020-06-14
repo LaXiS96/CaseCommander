@@ -48,7 +48,7 @@
                     {
                         "port": 0,
                         "type": "console",
-                        "label": "SWO output",
+                        "label": "Port 0",
                         "encoding": "ascii",
                         "showOnStartup": true
                     }
@@ -74,7 +74,7 @@
                     {
                         "port": 0,
                         "type": "console",
-                        "label": "SWO output",
+                        "label": "Port 0",
                         "encoding": "ascii",
                         "showOnStartup": true
                     }

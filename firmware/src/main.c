@@ -1,3 +1,4 @@
+#include <libopencm3/cm3/scb.h>
 #include <libopencm3/stm32/gpio.h>
 #include <libopencm3/stm32/rcc.h>
 
@@ -7,6 +8,7 @@
 #include "commander.h"
 #include "tacho.h"
 #include "usb.h"
+#include <led.h>
 #include <trace.h>
 
 static void blinkTask(void *arg)
@@ -50,9 +52,24 @@ static void readTachoTask(void *arg)
 static void testTask(void *arg)
 {
     (void)arg;
+    // volatile char test[4];
+    // test[0] = '1';
+    // test[1] = '2';
+    // test[2] = '3';
+    // test[3] = '4';
 
-    char buf[128];
-    buf[sizeof(buf) - 1] = '\0';
+    // volatile uint32_t test = 1 / 0;
+
+    // volatile char buf[500];
+    // for (uint16_t i = 0; i < sizeof(buf) - 1; i++)
+    //     buf[i] = 'A';
+
+    // buf[sizeof(buf) - 1] = '\0';
+
+    // tracePrintLine(buf);
+
+    for (;;)
+        ;
 }
 
 int main(void)
@@ -61,57 +78,23 @@ int main(void)
 
     traceInit();
 
-    xTaskCreate(testTask, "test", 100, NULL, configMAX_PRIORITIES - 1, NULL);
-    vTaskStartScheduler();
+    // rcc_periph_clock_enable(RCC_GPIOC);
+    // gpio_set_mode(GPIOC, GPIO_MODE_OUTPUT_2_MHZ, GPIO_CNF_OUTPUT_PUSHPULL, GPIO13);
 
-    for (;;)
-        ;
+    // usbReenumerate();
+    // usbInit();
+    // commanderInit();
+    // tachoInit();
+    ledInit();
 
-    rcc_periph_clock_enable(RCC_GPIOC);
-    gpio_set_mode(GPIOC, GPIO_MODE_OUTPUT_2_MHZ, GPIO_CNF_OUTPUT_PUSHPULL, GPIO13);
+    // xTaskCreate(
+    //     blinkTask, "blinkTask", configMINIMAL_STACK_SIZE, NULL, configMAX_PRIORITIES - 1, NULL);
 
-    usbReenumerate();
-    usbInit();
-    commanderInit();
-    tachoInit();
+    // xTaskCreate(readTachoTask, "readTachoTask", 1024, NULL, configMAX_PRIORITIES - 1, NULL);
 
-    xTaskCreate(blinkTask, "blinkTask", 100, NULL, configMAX_PRIORITIES - 1, NULL);
-
-    // TODO implement hardfault handler and freertos stack overflow checking
-    xTaskCreate(readTachoTask, "readTachoTask", 1024, NULL, configMAX_PRIORITIES - 1, NULL);
-
-    vTaskStartScheduler();
+    // vTaskStartScheduler();
 
     for (;;)
         ;
     return 0;
-}
-
-void hard_fault_handler(void)
-{
-    // TODO write better HardFault handling
-    tracePrintLine("hard_fault_handler");
-    for (;;)
-        ;
-}
-
-void mem_manage_handler(void)
-{
-    tracePrintLine("mem_manage_handler");
-    for (;;)
-        ;
-}
-
-void bus_fault_handler(void)
-{
-    tracePrintLine("bus_fault_handler");
-    for (;;)
-        ;
-}
-
-void usage_fault_handler(void)
-{
-    tracePrintLine("usage_fault_handler");
-    for (;;)
-        ;
 }

@@ -54,6 +54,13 @@ void traceWriteChar(const char chr)
     ITM_STIM8(CC_TRACE_CONSOLE_STIM) = chr;
 }
 
+void traceWriteString(const char *str, uint32_t len)
+{
+    for (uint32_t i = 0; i < len; i++) {
+        traceWriteChar(str[i]);
+    }
+}
+
 void tracePrint(const char *str)
 {
     const char *chr = str;
