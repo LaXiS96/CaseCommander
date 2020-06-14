@@ -5,11 +5,11 @@
 #include <FreeRTOS.h>
 #include <task.h>
 
-#include "commander.h"
-#include "tacho.h"
-#include "usb.h"
+#include <commander.h>
 #include <led.h>
+#include <tacho.h>
 #include <trace.h>
+#include <usb.h>
 
 static void blinkTask(void *arg)
 {
@@ -26,50 +26,20 @@ static void readTachoTask(void *arg)
     (void)arg;
 
     for (;;) {
-        // if (tachoValues.ch3.rpm == 0) {
-        //     usbWriteString("zero here\n");
-        // }
-        usbWriteString(cc_sprintf("debug before1: %d\n", debugStatus));
-        debugStatus = 0;
-        usbWriteString(cc_sprintf("debug before2: %d\n", debugStatus));
-        usbWriteString(cc_sprintf(
-            "\n1:%d,%d\n2:%d,%d\n3:%d,%d\n4:%d,%d\n",
-            tachoValues.ch1.rpm,
-            tachoValues.ch1.noSignal,
-            tachoValues.ch2.rpm,
-            tachoValues.ch2.noSignal,
-            tachoValues.ch3.rpm,
-            tachoValues.ch3.noSignal,
-            tachoValues.ch4.rpm,
-            tachoValues.ch4.noSignal));
+        tachoValues_t values = tachoGetValues();
+        printf(
+            "\n1:%d %d\n2:%d %d\n3:%d %d\n4:%d %d\n",
+            values.ch1.rpm,
+            values.ch1.noSignal,
+            values.ch2.rpm,
+            values.ch2.noSignal,
+            values.ch3.rpm,
+            values.ch3.noSignal,
+            values.ch4.rpm,
+            values.ch4.noSignal);
 
-        usbWriteString(cc_sprintf("debug after  : %d\n", debugStatus));
-
-        vTaskDelay(pdMS_TO_TICKS(2000));
+        vTaskDelay(pdMS_TO_TICKS(1000));
     }
-}
-
-static void testTask(void *arg)
-{
-    (void)arg;
-    // volatile char test[4];
-    // test[0] = '1';
-    // test[1] = '2';
-    // test[2] = '3';
-    // test[3] = '4';
-
-    // volatile uint32_t test = 1 / 0;
-
-    // volatile char buf[500];
-    // for (uint16_t i = 0; i < sizeof(buf) - 1; i++)
-    //     buf[i] = 'A';
-
-    // buf[sizeof(buf) - 1] = '\0';
-
-    // tracePrintLine(buf);
-
-    for (;;)
-        ;
 }
 
 int main(void)
@@ -84,15 +54,21 @@ int main(void)
     // usbReenumerate();
     // usbInit();
     // commanderInit();
-    // tachoInit();
-    ledInit();
+    tachoInit();
+    // ledInit();
 
     // xTaskCreate(
     //     blinkTask, "blinkTask", configMINIMAL_STACK_SIZE, NULL, configMAX_PRIORITIES - 1, NULL);
 
-    // xTaskCreate(readTachoTask, "readTachoTask", 1024, NULL, configMAX_PRIORITIES - 1, NULL);
+    xTaskCreate(
+        readTachoTask,
+        "readTachoTask",
+        configMINIMAL_STACK_SIZE,
+        NULL,
+        configMAX_PRIORITIES - 1,
+        NULL);
 
-    // vTaskStartScheduler();
+    vTaskStartScheduler();
 
     for (;;)
         ;

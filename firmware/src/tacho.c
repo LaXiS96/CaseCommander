@@ -1,12 +1,10 @@
-#include "tacho.h"
-// TODO change include quotes to <> everywhere
+#include <tacho.h>
 
-volatile uint32_t debugStatus = 0;
-
-tachoValues_t tachoValues = {};
+#include <stdio.h>
 
 typedef volatile struct tachoChannelRawValues_t {
     bool     firstEdge;
+    uint16_t currentValue;
     uint16_t lastValue;
     uint8_t  overflowCount;
 } tachoChannelRawValues_t;
@@ -18,71 +16,86 @@ typedef volatile struct tachoRawValues_t {
     tachoChannelRawValues_t ch4;
 } tachoRawValues_t;
 
+static tachoRawValues_t rawValues = {};
+
 void tim2_isr(void)
 {
-    static tachoRawValues_t rawValues = {};
+    // Channel 1 interrupt
+    if (timer_get_flag(TIM2, TIM_SR_CC1IF)) {
+        rawValues.ch1.overflowCount = 0;
 
-    const uint32_t interruptFlags[] = {
-        TIM_SR_CC1IF,
-        TIM_SR_CC2IF,
-        TIM_SR_CC3IF,
-        TIM_SR_CC4IF,
-    };
-    volatile uint32_t *const ccRegistersPtr[] = {
-        &TIM_CCR1(TIM2),
-        &TIM_CCR2(TIM2),
-        &TIM_CCR3(TIM2),
-        &TIM_CCR4(TIM2),
-    };
-    static tachoChannelRawValues_t *channelRawValuesPtr[] = {
-        (void *)&rawValues,
-        (void *)&rawValues + sizeof(tachoChannelRawValues_t) * 1,
-        (void *)&rawValues + sizeof(tachoChannelRawValues_t) * 2,
-        (void *)&rawValues + sizeof(tachoChannelRawValues_t) * 3,
-    };
-    static tachoChannelValues_t *channelValuesPtr[] = {
-        (void *)&tachoValues,
-        (void *)&tachoValues + sizeof(tachoChannelValues_t) * 1,
-        (void *)&tachoValues + sizeof(tachoChannelValues_t) * 2,
-        (void *)&tachoValues + sizeof(tachoChannelValues_t) * 3,
-    };
-
-    for (uint8_t i = 0; i < 4; i++) {
-        if (timer_get_flag(TIM2, interruptFlags[i])) {
-            channelRawValuesPtr[i]->overflowCount = 0;
-            channelValuesPtr[i]->noSignal         = false;
-
-            // Skip the first edge and sample on the next, this solves the periodical jumps in RPMs
-            // caused by the jitter in N-S/S-N pole pass timing by only considering N-N or S-S pole
-            // passes
-            if (channelRawValuesPtr[i]->firstEdge) {
-                channelRawValuesPtr[i]->firstEdge = false;
-            } else {
-                debugStatus = 1;
-                // TODO whytf does this drop samples? while the split version just below doesn't
-                channelValuesPtr[i]->rpm =
-                    10000000 / (*ccRegistersPtr[i] - channelRawValuesPtr[i]->lastValue) * 60 / 100;
-                // channelValuesPtr[i]->rpm = *ccRegistersPtr[i] -
-                // channelRawValuesPtr[i]->lastValue; channelValuesPtr[i]->rpm = 10000000 /
-                // channelValuesPtr[i]->rpm * 60 / 100;
-                channelRawValuesPtr[i]->lastValue = *ccRegistersPtr[i];
-                channelRawValuesPtr[i]->firstEdge = true;
-            }
-
-            timer_clear_flag(TIM2, interruptFlags[i]);
+        if (rawValues.ch1.firstEdge) {
+            rawValues.ch1.firstEdge = false;
+        } else {
+            rawValues.ch1.lastValue    = rawValues.ch1.currentValue;
+            rawValues.ch1.currentValue = TIM_CCR1(TIM2);
+            rawValues.ch1.firstEdge    = true;
         }
-        if (timer_get_flag(TIM2, TIM_SR_UIF)) {
-            // If the timer overflowed at least twice, the fan was disconnected
-            if (++(channelRawValuesPtr[i]->overflowCount) >= 2) {
-                debugStatus = 2;
-                channelValuesPtr[i]->rpm      = 0;
-                channelValuesPtr[i]->noSignal = true;
-                (channelRawValuesPtr[i]->overflowCount)--;
-            }
-        }
+
+        timer_clear_flag(TIM2, TIM_SR_CC1IF);
     }
 
-    timer_clear_flag(TIM2, TIM_SR_UIF);
+    // Channel 2 interrupt
+    if (timer_get_flag(TIM2, TIM_SR_CC2IF)) {
+        rawValues.ch2.overflowCount = 0;
+
+        if (rawValues.ch2.firstEdge) {
+            rawValues.ch2.firstEdge = false;
+        } else {
+            rawValues.ch2.lastValue    = rawValues.ch2.currentValue;
+            rawValues.ch2.currentValue = TIM_CCR2(TIM2);
+            rawValues.ch2.firstEdge    = true;
+        }
+
+        timer_clear_flag(TIM2, TIM_SR_CC2IF);
+    }
+
+    // Channel 3 interrupt
+    if (timer_get_flag(TIM2, TIM_SR_CC3IF)) {
+        rawValues.ch3.overflowCount = 0;
+
+        if (rawValues.ch3.firstEdge) {
+            rawValues.ch3.firstEdge = false;
+        } else {
+            rawValues.ch3.lastValue    = rawValues.ch3.currentValue;
+            rawValues.ch3.currentValue = TIM_CCR3(TIM2);
+            rawValues.ch3.firstEdge    = true;
+        }
+
+        timer_clear_flag(TIM2, TIM_SR_CC3IF);
+    }
+
+    // Channel 4 interrupt
+    if (timer_get_flag(TIM2, TIM_SR_CC4IF)) {
+        rawValues.ch4.overflowCount = 0;
+
+        if (rawValues.ch4.firstEdge) {
+            rawValues.ch4.firstEdge = false;
+        } else {
+            rawValues.ch4.lastValue    = rawValues.ch4.currentValue;
+            rawValues.ch4.currentValue = TIM_CCR4(TIM2);
+            rawValues.ch4.firstEdge    = true;
+        }
+
+        timer_clear_flag(TIM2, TIM_SR_CC4IF);
+    }
+
+    // Counter overflow interrupt
+    if (timer_get_flag(TIM2, TIM_SR_UIF)) {
+        if (++(rawValues.ch1.overflowCount) > 254)
+            (rawValues.ch1.overflowCount)--;
+
+        if (++(rawValues.ch2.overflowCount) > 254)
+            (rawValues.ch2.overflowCount)--;
+
+        if (++(rawValues.ch3.overflowCount) > 254)
+            (rawValues.ch3.overflowCount)--;
+
+        if (++(rawValues.ch4.overflowCount) > 254)
+            (rawValues.ch4.overflowCount)--;
+
+        timer_clear_flag(TIM2, TIM_SR_UIF);
+    }
 }
 
 void tachoInit(void)
@@ -96,19 +109,19 @@ void tachoInit(void)
     // Internal clock prescaler (72MHz/720 = 100kHz sampling rate)
     timer_set_prescaler(TIM2, 720);
 
-    // Enable input channel 1 (PA0) to IC input 1
+    // Enable input channels (PA0 to PA3)
     timer_ic_set_input(TIM2, TIM_IC1, TIM_IC_IN_TI1);
     timer_ic_set_input(TIM2, TIM_IC2, TIM_IC_IN_TI2);
     timer_ic_set_input(TIM2, TIM_IC3, TIM_IC_IN_TI3);
     timer_ic_set_input(TIM2, TIM_IC4, TIM_IC_IN_TI4);
 
-    // Filter channel 1: 8 values
+    // Digital filter: 8 values
     timer_ic_set_filter(TIM2, TIM_IC1, TIM_IC_CK_INT_N_8);
     timer_ic_set_filter(TIM2, TIM_IC2, TIM_IC_CK_INT_N_8);
     timer_ic_set_filter(TIM2, TIM_IC3, TIM_IC_CK_INT_N_8);
     timer_ic_set_filter(TIM2, TIM_IC4, TIM_IC_CK_INT_N_8);
 
-    // Enable input channel 1
+    // Enable input channels
     timer_ic_enable(TIM2, TIM_IC1);
     timer_ic_enable(TIM2, TIM_IC2);
     timer_ic_enable(TIM2, TIM_IC3);
@@ -121,4 +134,55 @@ void tachoInit(void)
 
     // Start timer
     timer_enable_counter(TIM2);
+}
+
+tachoValues_t tachoGetValues(void)
+{
+    tachoValues_t values = {};
+
+    if (rawValues.ch1.overflowCount >= 2) {
+        values.ch1.noSignal = true;
+        values.ch1.rpm      = 0;
+    } else {
+        values.ch1.noSignal = false;
+        values.ch1.rpm      = 10000000 /
+                         (rawValues.ch1.currentValue - rawValues.ch1.lastValue +
+                          (rawValues.ch1.currentValue < rawValues.ch1.lastValue ? 65536 : 0)) *
+                         60 / 100;
+    }
+
+    if (rawValues.ch2.overflowCount >= 2) {
+        values.ch2.noSignal = true;
+        values.ch2.rpm      = 0;
+    } else {
+        values.ch2.noSignal = false;
+        values.ch2.rpm      = 10000000 /
+                         (rawValues.ch2.currentValue - rawValues.ch2.lastValue +
+                          (rawValues.ch2.currentValue < rawValues.ch2.lastValue ? 65536 : 0)) *
+                         60 / 100;
+    }
+
+    if (rawValues.ch3.overflowCount >= 2) {
+        values.ch3.noSignal = true;
+        values.ch3.rpm      = 0;
+    } else {
+        values.ch3.noSignal = false;
+        values.ch3.rpm      = 10000000 /
+                         (rawValues.ch3.currentValue - rawValues.ch3.lastValue +
+                          (rawValues.ch3.currentValue < rawValues.ch3.lastValue ? 65536 : 0)) *
+                         60 / 100;
+    }
+
+    if (rawValues.ch4.overflowCount >= 2) {
+        values.ch4.noSignal = true;
+        values.ch4.rpm      = 0;
+    } else {
+        values.ch4.noSignal = false;
+        values.ch4.rpm      = 10000000 /
+                         (rawValues.ch4.currentValue - rawValues.ch4.lastValue +
+                          (rawValues.ch4.currentValue < rawValues.ch4.lastValue ? 65536 : 0)) *
+                         60 / 100;
+    }
+
+    return values;
 }
