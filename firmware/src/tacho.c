@@ -1,7 +1,5 @@
 #include <tacho.h>
 
-#include <stdio.h>
-
 typedef volatile struct tachoChannelRawValues_t {
     bool     firstEdge;
     uint16_t currentValue;

@@ -42,6 +42,19 @@ static void readTachoTask(void *arg)
     }
 }
 
+static void testTask(void *arg)
+{
+    (void)arg;
+
+    static char buf[] =
+        "012345678901234567890123456789012345678901234567890123456789012\n";
+
+    for (;;) {
+        usbWrite(buf, sizeof(buf) - 1);
+        vTaskDelay(pdMS_TO_TICKS(3000));
+    }
+}
+
 int main(void)
 {
     rcc_clock_setup_in_hse_8mhz_out_72mhz();
@@ -51,8 +64,8 @@ int main(void)
     // rcc_periph_clock_enable(RCC_GPIOC);
     // gpio_set_mode(GPIOC, GPIO_MODE_OUTPUT_2_MHZ, GPIO_CNF_OUTPUT_PUSHPULL, GPIO13);
 
-    // usbReenumerate();
-    // usbInit();
+    usbReenumerate();
+    usbInit();
     // commanderInit();
     tachoInit();
     // ledInit();
@@ -60,13 +73,15 @@ int main(void)
     // xTaskCreate(
     //     blinkTask, "blinkTask", configMINIMAL_STACK_SIZE, NULL, configMAX_PRIORITIES - 1, NULL);
 
-    xTaskCreate(
-        readTachoTask,
-        "readTachoTask",
-        configMINIMAL_STACK_SIZE,
-        NULL,
-        configMAX_PRIORITIES - 1,
-        NULL);
+    // xTaskCreate(
+    //     readTachoTask,
+    //     "readTachoTask",
+    //     configMINIMAL_STACK_SIZE,
+    //     NULL,
+    //     configMAX_PRIORITIES - 1,
+    //     NULL);
+
+    xTaskCreate(testTask, "test", configMINIMAL_STACK_SIZE, NULL, configMAX_PRIORITIES - 1, NULL);
 
     vTaskStartScheduler();
 

@@ -12,6 +12,7 @@
 
 #include <FreeRTOS.h>
 #include <message_buffer.h>
+#include <semphr.h>
 #include <stream_buffer.h>
 #include <task.h>
 
@@ -22,7 +23,7 @@
 #define CC_USB_EP_DATA_OUT     0x01
 #define CC_USB_MAX_PACKET_SIZE 64
 
-#define CC_STREAM_BUFFER_SIZE  256 // TODO testing, must be at least 64 (USB packet size)
+#define CC_STREAM_BUFFER_SIZE  256
 #define CC_MESSAGE_BUFFER_SIZE 256
 
 /**
